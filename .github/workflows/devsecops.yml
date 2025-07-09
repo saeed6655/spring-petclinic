@@ -40,21 +40,27 @@ jobs:
         args: "--verbose --redact"
 
     ##########################
-    # OWASP Dependency-Check
+    # OWASP Dependency-Check (Manual CLI)
     ##########################
-    - name: Run OWASP Dependency-Check
-      uses: dependency-check/Dependency-Check_Action@main
-      with:
-        project: "spring-petclinic"
-        path: "."
-        format: "HTML"
-        out: "dependency-check-report.html"
+    - name: Download Dependency-Check CLI
+      run: |
+        wget https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.6/dependency-check-9.0.6-release.zip
+        unzip dependency-check-9.0.6-release.zip -d dc
+        chmod +x dc/dependency-check/bin/dependency-check.sh
+
+    - name: Run Dependency-Check
+      run: |
+        dc/dependency-check/bin/dependency-check.sh \
+          --project "spring-petclinic" \
+          --scan . \
+          --format HTML \
+          --out reports
 
     - name: Upload Dependency-Check report
       uses: actions/upload-artifact@v4
       with:
         name: dependency-check-report
-        path: dependency-check-report.html
+        path: reports/dependency-check-report.html
 
     ##########################
     # Snyk Scan
