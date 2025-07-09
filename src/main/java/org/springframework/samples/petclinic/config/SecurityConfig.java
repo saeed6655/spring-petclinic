@@ -12,10 +12,9 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/admin/**", "/owners/**", "/vets/**").authenticated() // ضع المسارات التي تريد حمايتها
-                .anyRequest().permitAll()
+                .anyRequest().authenticated() // يتطلب تسجيل الدخول لجميع الطلبات
             )
-            .formLogin();
+            .formLogin(); // يستخدم صفحة تسجيل الدخول الافتراضية
         return http.build();
     }
 }
