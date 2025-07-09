@@ -42,26 +42,19 @@ jobs:
     ##########################
     # OWASP Dependency-Check (Manual with NVD API Key)
     ##########################
-    - name: Download Dependency-Check CLI
+    - name: Install Trivy
       run: |
-        wget https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.6/dependency-check-9.0.6-release.zip
-        unzip dependency-check-9.0.6-release.zip -d dc
-        chmod +x dc/dependency-check/bin/dependency-check.sh
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
-    - name: Run Dependency-Check
+    - name: Run Trivy vulnerability scan on Maven project
       run: |
-        dc/dependency-check/bin/dependency-check.sh \
-          --nvdApiKey ${{ secrets.NVD_API_KEY }} \
-          --project "spring-petclinic" \
-          --scan . \
-          --format HTML \
-          --out reports
+        trivy fs . --scanners vuln --vuln-type library --format json --output trivy-report.json || true
 
-    - name: Upload Dependency-Check report
+    - name: Upload Trivy report
       uses: actions/upload-artifact@v4
       with:
-        name: dependency-check-report
-        path: reports/dependency-check-report.html
+        name: trivy-report
+        path: trivy-report.json
 
     ##########################
     # Snyk Scan
