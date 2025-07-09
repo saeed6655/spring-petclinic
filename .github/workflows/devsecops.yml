@@ -40,7 +40,7 @@ jobs:
         args: "--verbose --redact"
 
     ##########################
-    # OWASP Dependency-Check (Manual CLI)
+    # OWASP Dependency-Check (Manual with NVD API Key)
     ##########################
     - name: Download Dependency-Check CLI
       run: |
@@ -51,6 +51,7 @@ jobs:
     - name: Run Dependency-Check
       run: |
         dc/dependency-check/bin/dependency-check.sh \
+          --nvdApiKey ${{ secrets.NVD_API_KEY }} \
           --project "spring-petclinic" \
           --scan . \
           --format HTML \
