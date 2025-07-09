@@ -1,0 +1,74 @@
+name: DevSecOps Security Checks
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  security-checks:
+    name: Run Security Scans
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    ##########################
+    # Semgrep (SAST)
+    ##########################
+    - name: Run Semgrep
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: p/java
+      env:
+        SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+    ##########################
+    # Gitleaks (Secrets scan)
+    ##########################
+    - name: Run Gitleaks
+      uses: gitleaks/gitleaks-action@v2
+      with:
+        args: "--verbose --redact"
+
+    ##########################
+    # OWASP Dependency-Check
+    ##########################
+    - name: Run OWASP Dependency-Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: "spring-petclinic"
+        scanpath: "."
+        format: "HTML"
+
+    - name: Upload Dependency-Check report
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-check-report
+        path: dependency-check-report.html
+
+    ##########################
+    # Snyk Scan
+    ##########################
+    - name: Install Snyk CLI
+      run: npm install -g snyk
+
+    - name: Authenticate Snyk
+      run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+    - name: Run Snyk to check for vulnerabilities
+      run: snyk test --all-projects --json-file-output=snyk-report.json || true
+
+    - name: Upload Snyk report
+      uses: actions/upload-artifact@v4
+      with:
+        name: snyk-report
+        path: snyk-report.json
